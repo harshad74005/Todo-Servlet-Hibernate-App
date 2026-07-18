@@ -2,13 +2,11 @@ package com.controler;
 
 import java.io.IOException;
 import java.util.List;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import com.dao.TaskDao;
 import com.dto.Task;
 
@@ -22,7 +20,6 @@ public class TodoServlet extends HttpServlet {
         taskDao = new TaskDao();
     }
 
-    // GET Request: List dakhvane, status toggle karne kiwa delete karne
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
@@ -37,17 +34,15 @@ public class TodoServlet extends HttpServlet {
                 boolean status = Boolean.parseBoolean(request.getParameter("status"));
                 taskDao.updateTaskStatus(id, status);
             }
-            response.sendRedirect("todo"); // URL clean sathi parat redirect
+            response.sendRedirect("todo");
             return;
         }
 
-        // Default: Sarya tasks chi list dynamic JSP page kade forward karne
         List<Task> listTask = taskDao.fetchAllTasks();
         request.setAttribute("listTask", listTask);
         request.getRequestDispatcher("todo-list.jsp").forward(request, response);
     }
 
-    // POST Request: Form submit kelyavar navin ToDo create karne
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {

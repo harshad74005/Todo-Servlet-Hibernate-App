@@ -6,53 +6,80 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-
 import com.dto.Task;
 
 public class TaskDao {
 
-    // Tu banavlela exact JPA configuration setup
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("Harshad");
-    EntityManager em = emf.createEntityManager();
-    EntityTransaction et = em.getTransaction();
-    
-    // 1. Task Add karne
+    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("Harshad");
+
     public void insertTask(Task task) {
-        et.begin();
-        em.persist(task);
-        et.commit();
-    }
-
-    // 2. ID varun single task shodhane
-    public Task fetchById(int id) {
-        return em.find(Task.class, id);
-    }
-
-    // 3. Sagle Tasks list sathi baher kadhne
-    public List<Task> fetchAllTasks() {
-        Query q = em.createQuery("select t from Task t order by t.id desc");
-        List<Task> list = q.getResultList();
-        return list;
-    }
-
-    // 4. Task status swap karne (Done/Undone)
-    public void updateTaskStatus(int id, boolean currentStatus) {
-        Task task = fetchById(id);
-        if(task != null) {
-            task.setCompleted(!currentStatus);
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction et = em.getTransaction();
+        try {
             et.begin();
-            em.merge(task);
+            em.persist(task);
             et.commit();
+        } catch (Exception e) {
+            if (et.isActive()) et.rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
         }
     }
 
-    // 5. Task Delete karne
-    public void deleteTask(int id) {
-        Task task = fetchById(id);
-        if(task != null) {
+    public Task fetchById(int id) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.find(Task.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Task> fetchAllTasks() {
+        EntityManager em = emf.createEntityManager();
+        try {
+            Query q = em.createQuery("select t from Task t order by t.id desc");
+            return q.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public void updateTaskStatus(int id, boolean currentStatus) {
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction et = em.getTransaction();
+        try {
             et.begin();
-            em.remove(task);
+            Task task = em.find(Task.class, id);
+            if (task != null) {
+                task.setCompleted(!currentStatus);
+                em.merge(task);
+            }
             et.commit();
+        } catch (Exception e) {
+            if (et.isActive()) et.rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
+
+    public void deleteTask(int id) {
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction et = em.getTransaction();
+        try {
+            et.begin();
+            Task task = em.find(Task.class, id);
+            if (task != null) {
+                em.remove(em.contains(task) ? task : em.merge(task));
+            }
+            et.commit();
+        } catch (Exception e) {
+            if (et.isActive()) et.rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
         }
     }
 }
